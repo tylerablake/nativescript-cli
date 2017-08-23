@@ -13,7 +13,19 @@ import { settlePromises } from "./common/helpers";
 	err.printCallStack = config.DEBUG;
 
 	const logger: ILogger = $injector.resolve("logger");
-
+	// logger.info("INFO MESSAGE 1");
+	// logger.info("INFO MESSAGE 2");
+	// logger.info("INFO MESSAGE 3");
+	// logger.warn("WARNING MESSAGE 1");
+	// logger.warn("WARNING MESSAGE 2");
+	// logger.warn("WARNING MESSAGE 3");
+	// logger.debug("DEBUG MESSAGE 1");
+	// logger.debug("DEBUG MESSAGE 2");
+	// logger.debug("DEBUG MESSAGE 3");
+	// logger.trace("TRACE MESSAGE 1");
+	// logger.trace("TRACE MESSAGE 2");
+	// logger.trace("TRACE MESSAGE 3");
+	// return ;
 	const extensibilityService: IExtensibilityService = $injector.resolve("extensibilityService");
 	try {
 		await settlePromises<IExtensionData>(extensibilityService.loadExtensions());

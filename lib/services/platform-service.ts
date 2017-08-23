@@ -397,7 +397,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			// Process node_modules folder
 			await this.$nodeModulesBuilder.prepareJSNodeModules(tnsModulesDestinationPath, platform, lastModifiedTime, projectData, projectFilesConfig);
 		} catch (error) {
-			this.$logger.debug(error);
+			this.$logger.trace(error);
 			shell.rm("-rf", appDestinationDirectoryPath);
 			this.$errors.failWithoutHelp(`Processing node_modules failed. ${error}`);
 		}

@@ -48,7 +48,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 
 			return await this.installCore(packageToInstall, pathToSave, version, dependencyType);
 		} catch (error) {
-			this.$logger.debug(error);
+			this.$logger.trace(error);
 
 			throw error;
 		}

@@ -33,7 +33,7 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 			try {
 				this.socket = await helpers.connectEventuallyUntilTimeout(() => net.connect(IOSDeviceLiveSyncService.BACKEND_PORT), 5000);
 			} catch (e) {
-				this.$logger.debug(e);
+				this.$logger.trace(e);
 				return false;
 			}
 		} else {

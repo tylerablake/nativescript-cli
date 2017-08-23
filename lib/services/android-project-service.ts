@@ -396,7 +396,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			}
 		} catch (e) {
 			if (e.code === "ENOENT") {
-				this.$logger.debug("No native code jars found: " + e.message);
+				this.$logger.trace("No native code jars found: " + e.message);
 			} else {
 				throw e;
 			}

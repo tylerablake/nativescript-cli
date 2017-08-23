@@ -319,7 +319,7 @@ class TestExecutionService implements ITestExecutionService {
 		}
 
 		karmaConfig.projectDir = projectData.projectDir;
-		this.$logger.debug(JSON.stringify(karmaConfig, null, 4));
+		this.$logger.trace(JSON.stringify(karmaConfig, null, 4));
 
 		return karmaConfig;
 	}
