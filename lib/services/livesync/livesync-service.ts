@@ -6,6 +6,7 @@ import { hook } from "../../common/helpers";
 import { APP_FOLDER_NAME, PACKAGE_JSON_FILE_NAME, LiveSyncTrackActionNames, USER_INTERACTION_NEEDED_EVENT_NAME, DEBUGGER_ATTACHED_EVENT_NAME, DEBUGGER_DETACHED_EVENT_NAME, TrackActionNames } from "../../constants";
 import { FileExtensions, DeviceTypes, DeviceDiscoveryEventNames } from "../../common/constants";
 import { cache } from "../../common/decorators";
+import * as uuid from "uuid";
 
 const deviceDescriptorPrimaryKey = "identifier";
 
@@ -49,6 +50,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 	}
 
 	public async stopLiveSync(projectDir: string, deviceIdentifiers?: string[], stopOptions?: { shouldAwaitAllActions: boolean }): Promise<void> {
+		console.log("STOP LiveSync called", projectDir, deviceIdentifiers, stopOptions);
+
 		const liveSyncProcessInfo = this.liveSyncProcessesInfo[projectDir];
 
 		if (liveSyncProcessInfo) {
@@ -539,9 +542,16 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			let timeoutTimer: NodeJS.Timer;
 
 			const startTimeout = () => {
+				const guid = uuid.v4();
+				console.log(`###${guid} startTimeout called`);
+
 				timeoutTimer = setTimeout(async () => {
+					console.log(`###${guid} timeout passed, now add action to chain`);
 					// Push actions to the queue, do not start them simultaneously
 					await this.addActionToChain(projectData.projectDir, async () => {
+
+						console.log(`###${guid} Starting action from chain for filesToSync: ${filesToSync.join(", ")} and filesToRemove: ${filesToRemove}.`);
+
 						if (filesToSync.length || filesToRemove.length) {
 							try {
 								const currentFilesToSync = _.cloneDeep(filesToSync);
@@ -557,6 +567,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 								const latestAppPackageInstalledSettings = this.getDefaultLatestAppPackageInstalledSettings();
 
 								await this.$devicesService.execute(async (device: Mobile.IDevice) => {
+									console.log(`###${guid} executing action on device: ${device.deviceInfo.identifier}. $$$ START`);
 									const liveSyncProcessInfo = this.liveSyncProcessesInfo[projectData.projectDir];
 									const deviceBuildInfoDescriptor = _.find(liveSyncProcessInfo.deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
 
@@ -573,6 +584,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 										env: liveSyncData.env,
 										skipModulesNativeCheck: !liveSyncData.watchAllFiles
 									}, { skipNativePrepare: deviceBuildInfoDescriptor.skipNativePrepare });
+									console.log(`###${guid} executing action on device: ${device.deviceInfo.identifier}. $$$ After ensureLatestAppPackageIsInstalledOnDevice `);
 
 									const service = this.getLiveSyncService(device.deviceInfo.platform);
 									const settings: ILiveSyncWatchInfo = {
@@ -585,14 +597,21 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 									};
 
 									const liveSyncResultInfo = await service.liveSyncWatchAction(device, settings);
+									console.log(`###${guid} executing action on device: ${device.deviceInfo.identifier}. $$$ After service.liveSyncWatchAction `);
+
 									await this.refreshApplication(projectData, liveSyncResultInfo, deviceBuildInfoDescriptor.debugOptions, deviceBuildInfoDescriptor.outputPath);
+									console.log(`###${guid} executing action on device: ${device.deviceInfo.identifier}. $$$ After refreshApplication `);
+
 								},
 									(device: Mobile.IDevice) => {
+										console.log(`###${guid} canExecute action on device: ${device.deviceInfo.identifier}.`);
+
 										const liveSyncProcessInfo = this.liveSyncProcessesInfo[projectData.projectDir];
 										return liveSyncProcessInfo && _.some(liveSyncProcessInfo.deviceDescriptors, deviceDescriptor => deviceDescriptor.identifier === device.deviceInfo.identifier);
 									}
 								);
 							} catch (err) {
+								console.log(`###${guid} Error while trying to execute livesync action. Error is: ${err}`);
 								const allErrors = (<Mobile.IDevicesOperationError>err).allErrors;
 
 								if (allErrors && _.isArray(allErrors)) {
@@ -606,9 +625,15 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 											applicationIdentifier: projectData.projectId
 										});
 
+										console.log(`###${guid} Calling stopLiveSync: projectDir: ${projectData.projectDir} deviceIdentifier: ${deviceError.deviceIdentifier}`);
+
 										await this.stopLiveSync(projectData.projectDir, [deviceError.deviceIdentifier], { shouldAwaitAllActions: false });
+
+										console.log(`###${guid} After stopLiveSync: projectDir: ${projectData.projectDir} deviceIdentifier: ${deviceError.deviceIdentifier}`);
 									}
 								}
+
+								console.log(`###${guid} Finished with catch of err during livesync`);
 							}
 						}
 					});
@@ -635,6 +660,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 
 			const watcher = choki.watch(patterns, watcherOptions)
 				.on("all", async (event: string, filePath: string) => {
+					console.log(`Chokidar raised event ${event} for ${filePath}.`);
 					clearTimeout(timeoutTimer);
 
 					filePath = path.join(liveSyncData.projectDir, filePath);
@@ -647,11 +673,19 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 						filesToRemove.push(filePath);
 					}
 
+					console.log(`As chokidar raised event ${event}, we have to start the timeout of livesync service with filesToSync: ${filesToSync.join(", ")} and files to remove: ${filesToRemove}.`);
+
 					// Do not sync typescript files directly - wait for javascript changes to occur in order to restart the app only once
 					if (path.extname(filePath) !== FileExtensions.TYPESCRIPT_FILE) {
+						console.log("#### Now starting timeout");
 						startTimeout();
 					}
 				});
+
+			watcher.on("error", async (err: Error) => {
+				console.log("ERROR in watcher: ", err);
+				await this.stopLiveSync(projectData.projectDir);
+			});
 
 			this.liveSyncProcessesInfo[liveSyncData.projectDir].watcherInfo = { watcher, patterns };
 			this.liveSyncProcessesInfo[liveSyncData.projectDir].timer = timeoutTimer;
