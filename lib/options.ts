@@ -39,7 +39,8 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			inspector: { type: OptionType.Boolean },
 			clean: { type: OptionType.Boolean },
 			watch: { type: OptionType.Boolean, default: true },
-			background: { type: OptionType.String }
+			background: { type: OptionType.String },
+			analyticsLogFile: { type: OptionType.String }
 		},
 			$errors, $staticConfig, $settingsService);
 

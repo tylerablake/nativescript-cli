@@ -18,8 +18,6 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 
 		const templateName = constants.RESERVED_TEMPLATE_NAMES[name.toLowerCase()] || name;
 
-		await this.$analyticsService.track("Template used for project creation", templateName);
-
 		await this.$analyticsService.trackEventActionInGoogleAnalytics({
 			action: constants.TrackActionNames.CreateProject,
 			isForDevice: null,

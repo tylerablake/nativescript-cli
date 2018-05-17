@@ -794,14 +794,6 @@ export class PlatformServiceStub extends EventEmitter implements IPlatformServic
 	public readFile(device: Mobile.IDevice, deviceFilePath: string): Promise<string> {
 		return Promise.resolve("");
 	}
-
-	public async trackProjectType(): Promise<void> {
-		return null;
-	}
-
-	public async trackActionForPlatform(actionData: ITrackPlatformAction): Promise<void> {
-		return null;
-	}
 }
 
 export class EmulatorPlatformService implements IEmulatorPlatformService {

@@ -26,7 +26,6 @@ export class DebugPlatformCommand implements ICommand {
 
 		const debugData = this.$debugDataService.createDebugData(this.$projectData, this.$options);
 
-		await this.$platformService.trackProjectType(this.$projectData);
 		const selectedDeviceForDebug = await this.getDeviceForDebug();
 		debugData.deviceIdentifier = selectedDeviceForDebug.deviceInfo.identifier;
 

@@ -17,7 +17,7 @@ class DoctorService implements IDoctorService {
 		private $terminalSpinnerService: ITerminalSpinnerService,
 		private $versionsService: IVersionsService) { }
 
-	public async printWarnings(configOptions?: { trackResult: boolean }): Promise<void> {
+	public async printWarnings(): Promise<void> {
 		const infos = await this.$terminalSpinnerService.execute<NativeScriptDoctor.IInfo[]>({
 			text: `Getting environment information ${EOL}`
 		}, () => doctor.getInfos());
@@ -28,10 +28,6 @@ class DoctorService implements IDoctorService {
 		const hasAndroidWarnings = warnings.filter(warning => _.includes(warning.platforms, constants.ANDROID_PLATFORM_NAME)).length > 0;
 		if (hasAndroidWarnings) {
 			this.printPackageManagerTip();
-		}
-
-		if (!configOptions || configOptions.trackResult) {
-			await this.$analyticsService.track("DoctorEnvironmentSetup", hasWarnings ? "incorrect" : "correct");
 		}
 
 		this.printInfosCore(infos);
