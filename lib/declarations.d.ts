@@ -588,7 +588,8 @@ interface IDeviceEmulator extends IHasEmulatorOption, IDeviceIdentifier { }
 
 interface IRunPlatformOptions extends IJustLaunch, IDeviceEmulator { }
 
-interface IDeployPlatformOptions extends IAndroidReleaseOptions, IPlatformTemplate, IRelease, IClean, IDeviceEmulator, IProvision, ITeamIdentifier, IProjectDir {
+interface IDeployPlatformOptions extends Partial<IAndroidReleaseOptions>, Partial<IPlatformTemplate>, Partial<IRelease>, Partial<IClean>, Partial<IDeviceEmulator>, 
+Partial<IProvision>, Partial<ITeamIdentifier>, IProjectDir {
 	forceInstall?: boolean;
 }
 
