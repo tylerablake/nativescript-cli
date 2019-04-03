@@ -17,6 +17,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		"android-26",
 		"android-27",
 		"android-28",
+		"android-29"
 	];
 	private static MIN_REQUIRED_COMPILE_TARGET = 28;
 	private static REQUIRED_BUILD_TOOLS_RANGE_PREFIX = ">=23";
@@ -150,7 +151,6 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 				if (!_.includes(installedTargets, androidCompileSdk)) {
 					this.$errors.failWithoutHelp(`You have specified '${userSpecifiedCompileSdk}' for compile sdk, but it is not installed on your system.`);
 				}
-
 				this.selectedCompileSdk = userSpecifiedCompileSdk;
 			} else {
 				const latestValidAndroidTarget = this.getLatestValidAndroidTarget();

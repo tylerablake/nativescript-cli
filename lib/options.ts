@@ -87,7 +87,7 @@ export class Options {
 			keyStoreAliasPassword: { type: OptionType.String, hasSensitiveValue: true },
 			ignoreScripts: { type: OptionType.Boolean, hasSensitiveValue: false },
 			disableNpmInstall: { type: OptionType.Boolean, hasSensitiveValue: false },
-			compileSdk: { type: OptionType.Number, hasSensitiveValue: false },
+			compileSdk: { type: OptionType.String, hasSensitiveValue: false },
 			port: { type: OptionType.Number, hasSensitiveValue: false },
 			copyTo: { type: OptionType.String, hasSensitiveValue: true },
 			platformTemplate: { type: OptionType.String, hasSensitiveValue: true },
