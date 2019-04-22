@@ -117,6 +117,9 @@ To check if your system is configured properly, run the following command.
 tns doctor
 ```
 
+
+
+
 ## Configure Proxy Settings
 
 If you are working with the NativeScript CLI behind a web proxy, you need to configure your proxy settings.
