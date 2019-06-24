@@ -171,7 +171,7 @@ declare module Mobile {
 		 * @param {string} deviceIdentifier The unique identifier of the device.
 		 * @returns {void}
 		 */
-		logData(line: string, platform: string, deviceIdentifier: string): void;
+		logData(line: string, platform: string, deviceIdentifier: string): Promise<void>;
 
 		/**
 		 * Sets the level of logging that will be used.
@@ -258,7 +258,7 @@ declare module Mobile {
 	 * Replaces file paths in device log with their original location
 	 */
 	interface ILogSourceMapService {
-		replaceWithOriginalFileLocations(platform: string, messageData: string, loggingOptions: Mobile.IDeviceLogOptions): string
+		replaceWithOriginalFileLocations(platform: string, messageData: string, loggingOptions: Mobile.IDeviceLogOptions): Promise<string>;
 	}
 
 	/**

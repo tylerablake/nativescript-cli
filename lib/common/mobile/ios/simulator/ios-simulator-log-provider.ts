@@ -22,9 +22,9 @@ export class IOSSimulatorLogProvider extends EventEmitter implements Mobile.IiOS
 		if (!this.simulatorsLoggingEnabled[deviceId]) {
 			const deviceLogChildProcess: ChildProcess = await this.$iOSSimResolver.iOSSim.getDeviceLogProcess(deviceId, options ? options.predicate : null);
 
-			const action = (data: NodeBuffer | string) => {
+			const action = async (data: NodeBuffer | string) => {
 				const message = data.toString();
-				this.$deviceLogProvider.logData(message, this.$devicePlatformsConstants.iOS, deviceId);
+				await this.$deviceLogProvider.logData(message, this.$devicePlatformsConstants.iOS, deviceId);
 			};
 
 			if (deviceLogChildProcess) {

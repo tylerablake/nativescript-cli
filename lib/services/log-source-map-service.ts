@@ -26,10 +26,10 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 		private $projectDataService: IProjectDataService,
 		private $injector: IInjector,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants) {
-			this.getProjectData = _.memoize(this.$projectDataService.getProjectData.bind(this.$projectDataService));
+		this.getProjectData = _.memoize(this.$projectDataService.getProjectData.bind(this.$projectDataService));
 	}
 
-	public replaceWithOriginalFileLocations(platform: string, messageData: string, loggingOptions: Mobile.IDeviceLogOptions): string {
+	public async replaceWithOriginalFileLocations(platform: string, messageData: string, loggingOptions: Mobile.IDeviceLogOptions): Promise<string> {
 		if (!messageData || !loggingOptions.projectDir) {
 			return messageData;
 		}
@@ -40,40 +40,57 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 		const parserFunction = isAndroid ? this.parseAndroidLog.bind(this, projectData) : this.parseIosLog.bind(this);
 		let outputData = "";
 
-		lines.forEach(rawLine => {
+		for (const rawLine of lines) {
 			const parsedLine = parserFunction(rawLine);
-			const originalLocation = this.getOriginalFileLocation(platform, parsedLine, projectData);
+			const originalLocation = await this.getOriginalFileLocation(platform, parsedLine, projectData);
 
 			if (originalLocation && originalLocation.sourceFile) {
-				const {sourceFile, line, column} = originalLocation;
+				const { sourceFile, line, column } = originalLocation;
 				outputData = `${outputData}${parsedLine.message} ${LogSourceMapService.FILE_PREFIX}${sourceFile}:${line}:${column}\n`;
 			} else if (rawLine !== "") {
 				outputData = `${outputData}${rawLine}\n`;
 			}
-		});
+		};
 
 		return outputData;
 	}
 
-	private getOriginalFileLocation(platform: string, parsedLine: IParsedMessage, projectData: IProjectData): IFileLocation {
-		const fileLoaction = path.join(this.getFilesLocation(platform, projectData), APP_FOLDER_NAME);
+	private fileCache: IDictionary<{ hashedContent: string, sourceMapConsumer: sourcemap.SourceMapConsumer }> = {};
+
+	private async getOriginalFileLocation(platform: string, parsedLine: IParsedMessage, projectData: IProjectData): Promise<IFileLocation> {
+		const fileLocation = path.join(this.getFilesLocation(platform, projectData), APP_FOLDER_NAME);
 
 		if (parsedLine && parsedLine.filePath) {
-			const sourceMapFile = path.join(fileLoaction, parsedLine.filePath);
+			const sourceMapFile = path.join(fileLocation, parsedLine.filePath);
 			if (this.$fs.exists(sourceMapFile)) {
-				const source = this.$fs.readText(sourceMapFile);
-				const sourceMapRaw = sourceMapConverter.fromSource(source);
-				if (sourceMapRaw && sourceMapRaw.sourcemap) {
-					const sourceMap = sourceMapRaw.sourcemap;
-					const smc = new sourcemap.SourceMapConsumer(sourceMap);
-					const originalPosition = smc.originalPositionFor({ line: parsedLine.line, column: parsedLine.column });
+				this.fileCache[sourceMapFile] = this.fileCache[sourceMapFile] || <any>{};
+				const currentContentHash = await this.$fs.getFileShasum(sourceMapFile);
+				let currentSourceMapConsumer: sourcemap.SourceMapConsumer = null;
+
+				if (this.fileCache[sourceMapFile].hashedContent !== currentContentHash || !this.fileCache[sourceMapFile].sourceMapConsumer) {
+					const source = this.$fs.readText(sourceMapFile);
+					const sourceMapRaw = sourceMapConverter.fromSource(source);
+					if (sourceMapRaw && sourceMapRaw.sourcemap) {
+						const sourceMap = sourceMapRaw.sourcemap;
+						currentSourceMapConsumer = new sourcemap.SourceMapConsumer(sourceMap);
+					}
+
+					this.fileCache[sourceMapFile] = { hashedContent: currentContentHash, sourceMapConsumer: currentSourceMapConsumer }
+				} else {
+					currentSourceMapConsumer = this.fileCache[sourceMapFile].sourceMapConsumer;
+				}
+
+				if (currentSourceMapConsumer) {
+					const originalPosition = currentSourceMapConsumer.originalPositionFor({ line: parsedLine.line, column: parsedLine.column });
 					let sourceFile = originalPosition.source && originalPosition.source.replace("webpack:///", "");
+
 					if (sourceFile) {
 						if (!_.startsWith(sourceFile, NODE_MODULES_FOLDER_NAME)) {
 							sourceFile = path.join(projectData.getAppDirectoryRelativePath(), sourceFile);
 						}
+
 						sourceFile = stringReplaceAll(sourceFile, "/", path.sep);
-						return { sourceFile, line: originalPosition.line, column: originalPosition.column};
+						return { sourceFile, line: originalPosition.line, column: originalPosition.column };
 					}
 				}
 			}
@@ -108,7 +125,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 				// "/data/data/org.nativescript.sourceMap/files/app/"
 				const devicePath = `${deviceProjectPath}/${APP_FOLDER_NAME}/`;
 				// "bundle.js"
-				filePath =  path.relative(devicePath, `${"/"}${parts[0]}`);
+				filePath = path.relative(devicePath, `${"/"}${parts[0]}`);
 				line = parseInt(parts[1]);
 				column = parseInt(parts[2]);
 				message = rawMessage.substring(0, fileIndex);
@@ -136,10 +153,10 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 			parts = fileSubstring.split(":");
 
 			if (parts && parts.length >= 3) {
-				filePath =  parts[0];
+				filePath = parts[0];
 				// "app/vendor.js"
 				if (_.startsWith(filePath, APP_FOLDER_NAME)) {
-					filePath = path.relative(APP_FOLDER_NAME , parts[0]);
+					filePath = path.relative(APP_FOLDER_NAME, parts[0]);
 				}
 				line = parseInt(parts[1]);
 				column = parseInt(parts[2]);

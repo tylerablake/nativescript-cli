@@ -9,10 +9,10 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 		super($logFilter, $logger);
 	}
 
-	public logData(lineText: string, platform: string, deviceIdentifier: string): void {
+	public async logData(lineText: string, platform: string, deviceIdentifier: string): Promise<void> {
 		const loggingOptions = this.getDeviceLogOptionsForDevice(deviceIdentifier);
 		let data = this.$logFilter.filterData(platform, lineText, loggingOptions);
-		data = this.$logSourceMapService.replaceWithOriginalFileLocations(platform, data, loggingOptions);
+		data = await this.$logSourceMapService.replaceWithOriginalFileLocations(platform, data, loggingOptions);
 		if (data) {
 			this.logDataCore(data);
 			this.emit(DEVICE_LOG_EVENT_NAME, lineText, deviceIdentifier, platform);

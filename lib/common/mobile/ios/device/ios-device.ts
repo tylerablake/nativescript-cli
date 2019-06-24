@@ -53,7 +53,7 @@ export class IOSDevice extends IOSDeviceBase {
 	@cache()
 	public async openDeviceLogStream(): Promise<void> {
 		if (this.deviceInfo.status !== commonConstants.UNREACHABLE_STATUS) {
-			this._deviceLogHandler = this.actionOnDeviceLog.bind(this);
+			this._deviceLogHandler = await this.actionOnDeviceLog.bind(this);
 			this.$iosDeviceOperations.on(commonConstants.DEVICE_LOG_EVENT_NAME, this._deviceLogHandler);
 			this.$iosDeviceOperations.startDeviceLog(this.deviceInfo.identifier);
 		}
@@ -76,9 +76,9 @@ export class IOSDevice extends IOSDeviceBase {
 		return socket;
 	}
 
-	private actionOnDeviceLog(response: IOSDeviceLib.IDeviceLogData): void {
+	private async actionOnDeviceLog(response: IOSDeviceLib.IDeviceLogData): Promise<void> {
 		if (response.deviceId === this.deviceInfo.identifier) {
-			this.$deviceLogProvider.logData(response.message, this.$devicePlatformsConstants.iOS, this.deviceInfo.identifier);
+			await this.$deviceLogProvider.logData(response.message, this.$devicePlatformsConstants.iOS, this.deviceInfo.identifier);
 		}
 	}
 

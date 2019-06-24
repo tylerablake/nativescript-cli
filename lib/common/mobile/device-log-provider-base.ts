@@ -9,7 +9,7 @@ export abstract class DeviceLogProviderBase extends EventEmitter implements Mobi
 		super();
 	}
 
-	public abstract logData(lineText: string, platform: string, deviceIdentifier: string): void;
+	public abstract logData(lineText: string, platform: string, deviceIdentifier: string): Promise<void>;
 
 	public abstract setLogLevel(logLevel: string, deviceIdentifier?: string): void;
 
