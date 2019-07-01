@@ -268,6 +268,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			const frameworkAddOptions: IXcode.Options = { customFramework: true };
 			if (this.isDynamicFramework(frameworkPath)) {
 				frameworkAddOptions["embed"] = true;
+				frameworkAddOptions["sign"] = true;
 			}
 
 			const frameworkRelativePath = '$(SRCROOT)/' + this.getLibSubpathRelativeToProjectPath(frameworkPath, projectData);
